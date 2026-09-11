@@ -52,20 +52,6 @@ GraphRAG/
 
 ---
 
-## Configuration
-
-Credentials can be stored in `.env` (automatically loaded from `~/Downloads/Neo4j-91fe5d8f-Created-2026-09-08.txt`):
-
-```env
-NEO4J_URI=neo4j+s://91fe5d8f.databases.neo4j.io
-NEO4J_USERNAME=91fe5d8f
-NEO4J_PASSWORD=fLALwy-bdXet6O-cEukr_lfpedlwkSiO8lEkAsdKLXc
-NEO4J_DATABASE=91fe5d8f
-GEMINI_API_KEY=<your-gemini-api-key>
-```
-
----
-
 ## CLI Usage
 
 ### 1. Ingest a PDF File
