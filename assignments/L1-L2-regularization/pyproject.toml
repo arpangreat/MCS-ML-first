@@ -1,0 +1,22 @@
+[project]
+name = "l1-l2-regularization"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "arpangreat", email = "arpanthegreat41@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "jupyterlab-night>=0.5.2",
+    "jupyterlab-vim>=4.1.4",
+    "scikit-learn>=1.9.1",
+    "seaborn>=0.13.2",
+]
+
+[project.scripts]
+l1-l2-regularization = "l1_l2_regularization:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"

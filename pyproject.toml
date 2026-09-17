@@ -12,6 +12,8 @@ dependencies = [
     "google-genai>=2.23.0",
     "ipython>=9.17.1",
     "jupyter>=1.1.1",
+    "jupyterlab-night>=0.5.2",
+    "jupyterlab-vim>=4.1.4",
     "matplotlib>=3.11.2",
     "neo4j>=6.3.1",
     "numpy>=2.5.3",
@@ -32,4 +34,6 @@ members = [
     "GraphRAG",
     "assignments/linear-regression",
     "assignments/multiple-linear-regression",
+    "assignments/L1-L2-regularization",
+    "assignments/KFold_Cross_Validation",
 ]
