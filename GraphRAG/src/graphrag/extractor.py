@@ -43,15 +43,40 @@ def normalize_rel_type(rel: str) -> str:
     return cleaned
 
 
+def resolve_model_name(name: str) -> str:
+    """Normalize model string to a valid Gemini API model identifier."""
+    clean = name.strip()
+    if clean.startswith("models/"):
+        clean = clean[len("models/"):]
+    shorthands = {
+        "3.8": "gemini-3.8-flash",
+        "3.8-flash": "gemini-3.8-flash",
+        "3.8_flash": "gemini-3.8-flash",
+        "gemini-3.8": "gemini-3.8-flash",
+        "2.5": "gemini-2.5-flash",
+        "2.5-flash": "gemini-2.5-flash",
+        "2.5-pro": "gemini-2.5-pro",
+        "pro": "gemini-2.5-pro",
+        "flash": "gemini-2.5-flash",
+    }
+    if clean.lower() in shorthands:
+        return shorthands[clean.lower()]
+    if not clean.startswith("gemini-"):
+        clean = f"gemini-{clean}"
+    return clean
+
+
 class Extractor:
     """Extracts deduplicated entities and relations using Gemini."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.5-flash"):
         cfg = Config.load()
         self.client = genai.Client(api_key=api_key or cfg.gemini_api_key)
+        self.model = resolve_model_name(model)
 
     def extract(self, text: str) -> tuple[list[dict], list[dict]]:
         """Extract canonical entities and relations from text."""
+        import time
         prompt = f"""Extract all key named entities and the explicit relationships connecting them.
 RULES FOR ZERO DUPLICATION:
 1. Always use full canonical names (never pronouns like "he", "they", "this company").
@@ -68,15 +93,25 @@ Text:
             temperature=0.1,
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
-        try:
-            res = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=config,
-            )
-            data = ExtractionData.model_validate_json(res.text)
-        except Exception:
-            return [], []
+
+        data = None
+        for attempt in range(4):
+            try:
+                res = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=config,
+                )
+                data = ExtractionData.model_validate_json(res.text)
+                break
+            except Exception as e:
+                err_str = str(e)
+                if ("503" in err_str or "429" in err_str or "UNAVAILABLE" in err_str) and attempt < 3:
+                    time.sleep(2 ** attempt)
+                    continue
+                if attempt == 3:
+                    print(f"Extraction failed with model {self.model}: {e}")
+                    return [], []
 
         # Deduplicate entities by canonical ID
         entities_by_id: dict[str, dict] = {}

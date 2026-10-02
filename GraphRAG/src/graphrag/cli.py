@@ -224,6 +224,45 @@ def handle_export_image(args: argparse.Namespace) -> None:
     ))
 
 
+def handle_benchmark(args: argparse.Namespace) -> None:
+    """Benchmark KG extraction methods with precision, recall, F1, and predicate analysis."""
+    from graphrag.benchmark import run_paper_baseline_evaluation, run_live_benchmark, resolve_model_name
+    from graphrag.evaluation import (
+        render_evaluation_summary,
+        render_category_breakdown,
+        render_predicate_complexity,
+        render_alignment_details,
+    )
+
+    resolved_model = resolve_model_name(args.model)
+    if args.mode == "paper":
+        console.print("\n[bold cyan]=== ISWC 2025 Paper Benchmark Reproduction (Abstract 438) ===[/]\n")
+        reports = run_paper_baseline_evaluation()
+    else:
+        console.print(f"\n[bold green]=== Live Model Benchmark vs. Paper Baselines (Model: {resolved_model}) ===[/]\n")
+        methods = [m.strip() for m in args.methods.split(",") if m.strip()] if args.methods else None
+        reports = run_live_benchmark(methods=methods, model_name=resolved_model, compare_with_paper=True)
+
+    if not reports:
+        console.print("[yellow]No evaluation reports generated.[/]")
+        return
+
+    console.print(render_evaluation_summary(reports))
+
+    if args.complexity:
+        console.print(render_predicate_complexity(reports))
+
+    if args.category:
+        live_reports = [r for r in reports if not r.is_paper_baseline]
+        for r in (live_reports if live_reports else reports):
+            console.print(render_category_breakdown(r))
+
+    if args.details:
+        live_reports = [r for r in reports if not r.is_paper_baseline]
+        for r in (live_reports if live_reports else reports):
+            console.print(render_alignment_details(r, max_items=args.max_details))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="graphrag", description="PDF Knowledge Graph Builder with Neo4j")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -272,6 +311,17 @@ def main() -> None:
     p_clr = sub.add_parser("clear", help="Clear all data from Neo4j")
     p_clr.add_argument("-y", "--yes", action="store_true")
     p_clr.set_defaults(func=handle_clear)
+
+    # Benchmark
+    p_bm = sub.add_parser("benchmark", help="Benchmark KG extraction (Precision, Recall, F1, Predicate Analysis)")
+    p_bm.add_argument("--mode", choices=["paper", "live", "both"], default="paper", help="paper (reproduce Table 1/2), live (run LLM extraction), or both")
+    p_bm.add_argument("--methods", default="LLMGraphTransformer,KGGen,GT2KG,CurrentGraphRAG", help="Comma-separated methods for live benchmark")
+    p_bm.add_argument("--model", default="gemini-2.5-flash", help="Gemini model to use for live tests")
+    p_bm.add_argument("--category", action="store_true", default=True, help="Show predicate category breakdown")
+    p_bm.add_argument("--complexity", action="store_true", default=True, help="Show predicate complexity analysis")
+    p_bm.add_argument("--details", action="store_true", help="Show detailed triple alignments")
+    p_bm.add_argument("--max-details", type=int, default=15, help="Max detailed alignment items to display")
+    p_bm.set_defaults(func=handle_benchmark)
 
     args = parser.parse_args()
     args.func(args)
