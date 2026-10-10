@@ -8,12 +8,15 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "basedpyright>=1.40.2",
     "google-auth>=2.58.0",
     "google-genai>=2.23.0",
     "ipython>=9.17.1",
     "jupyter>=1.1.1",
+    "jupyterlab>=4.6.3",
     "jupyterlab-lsp>=5.3.0",
     "jupyterlab-night>=0.5.2",
+    "jupyterlab-rainbow-brackets>=0.1.0",
     "jupyterlab-vim>=4.1.4",
     "matplotlib>=3.11.2",
     "neo4j>=6.3.1",
@@ -21,7 +24,7 @@ dependencies = [
     "pandas>=3.0.5",
     "rich>=15.0.0",
     "scikit-learn>=1.9.1",
-    "ty>=0.0.85",
+    "seaborn>=0.13.2",
 ]
 
 [project.scripts]
@@ -40,4 +43,5 @@ members = [
     "assignments/KFold_Cross_Validation",
     "Gnn",
     "assignments/model-comparison",
+    "assignments/naive-bayes",
 ]
